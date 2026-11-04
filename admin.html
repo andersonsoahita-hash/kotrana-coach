@@ -50,7 +50,7 @@ function render(){
   var A=$('#app');
   if(!API){A.innerHTML=head()+'<div class="card">Adresse du serveur manquante dans config.js.</div>';return}
   if(!KEY||!D){
-    A.innerHTML=head()+'<div class="card"><label for="k">Clé admin</label><input id="k" type="password" autocomplete="current-password" placeholder="Colle ta clé"><div class="row" style="margin-top:12px"><button class="p sp" data-a="login">Entrer</button></div></div>';return}
+    A.innerHTML=head()+'<div class="card"><label for="k">Clé admin</label><input id="k" type="password" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Colle ta clé"><div class="row" style="margin-top:12px"><button class="p sp" data-a="login">Entrer</button></div></div>';return}
   var nd=D.demandes.filter(function(x){return x.statut==='en attente'}).length;
   var h=head()+'<div class="row"><span class="mu sp">'+esc(D.jetons.length)+' jeton(s) · '+esc(D.coachs.length)+' coach(s)</span><button class="s" data-a="refresh">Actualiser</button><button class="s" data-a="logout">Quitter</button></div>'
    +'<div class="tabs"><button data-a="tab" data-t="dem" class="'+(tab==='dem'?'on':'')+'">Demandes'+(nd?' ('+nd+')':'')+'</button><button data-a="tab" data-t="jet" class="'+(tab==='jet'?'on':'')+'">Jetons</button><button data-a="tab" data-t="coa" class="'+(tab==='coa'?'on':'')+'">Coachs</button></div>';
@@ -101,7 +101,7 @@ function cp(v){
 var sure={};
 async function act(e){
   var t=e.target.closest('[data-a]');if(!t||busy)return;var a=t.dataset.a;
-  if(a==='login'){KEY=$('#k').value.trim();if(!KEY)return;try{sessionStorage.setItem('kc_admin',KEY)}catch(x){}busy=true;await load(true);busy=false;return}
+  if(a==='login'){KEY=$('#k').value.replace(/\s+/g,'').toUpperCase();if(!KEY)return;try{sessionStorage.setItem('kc_admin',KEY)}catch(x){}busy=true;await load(true);busy=false;return}
   if(a==='logout'){KEY='';D=null;try{sessionStorage.removeItem('kc_admin')}catch(x){}render();return}
   if(a==='refresh'){busy=true;await load();busy=false;return}
   if(a==='tab'){tab=t.dataset.t;render();return}
