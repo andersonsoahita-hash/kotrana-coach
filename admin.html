@@ -81,8 +81,8 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--ln);border-
 }
 @media(min-width:1350px){.grid{grid-template-columns:repeat(3,1fr)}}
 </style></head><body>
-<script>window.ENTREE={name:"KOTRANA",sub:"Admin · by Stephen",lines:["Les demandes.","Les jetons.","Les coachs."],away:5,busy:function(){return !!window.__kcBusy},logo:"icon-192.png",v:"2026.11.04-2203"}</script>
-<script src="entree.js?v=2026.11.04-2203"></script>
+<script>window.ENTREE={name:"KOTRANA",sub:"Admin · by Stephen",lines:["Les demandes.","Les jetons.","Les coachs."],away:5,busy:function(){return !!window.__kcBusy},logo:"icon-192.png",v:"2026.11.04-2214"}</script>
+<script src="entree.js?v=2026.11.04-2214"></script>
 <div id="shell"><aside id="side"></aside><main id="main"></main></div><div id="t"></div>
 <script src="config.js"></script>
 <script>
@@ -182,7 +182,9 @@ function sheetHtml(){
     s.msg=m;
     return '<div class="ov"><div><h3>Jeton créé · '+esc(s.nom)+'</h3><p class="mu">Il ne sera plus jamais affiché. Copie-le maintenant.</p><div class="tok">'+esc(s.tok)+'</div><div class="row"><button class="p sp" data-a="cp" data-v="'+esc(s.tok)+'">Copier le jeton</button></div>'
      +(co&&s.code?'<div class="hint">Compte coach créé automatiquement · code <b>'+esc(s.code)+'</b></div>':'')
-     +'<label>Message prêt à envoyer</label><pre>'+esc(m)+'</pre><div class="row"><button class="sp" data-a="cpmsg">Copier le message</button>'+(s.email?'<button data-a="cp" data-v="'+esc(s.email)+'">Copier l’e-mail</button>':'')+'<button data-a="closesheet">Fermer</button></div></div></div>';
+     +'<label>Envoyer par e-mail</label><div class="row"><input id="f-to" class="sp" type="email" autocapitalize="none" placeholder="adresse e-mail du destinataire" value="'+esc(s.to!=null?s.to:(s.email||''))+'" style="width:auto"><button class="p" data-a="sendmail" '+(s.sent?'disabled':'')+'>'+(s.sent?'Envoyé ✓':'Envoyer')+'</button></div>'
+     +(s.sent?'<div class="hint">E-mail envoyé à <b>'+esc(s.sent)+'</b> depuis kotranabysas@gmail.com.</div>':'')
+     +'<label>Message</label><pre>'+esc(m)+'</pre><div class="row"><button class="sp" data-a="cpmsg">Copier le message</button><button data-a="closesheet">Fermer</button></div></div></div>';
   }
   var co=sheet.role==='c',opts=D.coachs.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===sheet.coachId?' selected':'')+'>'+esc(c.nom)+'</option>'}).join('');
   return '<div class="ov"><div><h3>Nouveau jeton</h3>'
@@ -209,11 +211,14 @@ async function act(e){
   if(a==='flt'){flt=t.dataset.f;window.__fq=0;render();return}
   if(a==='cp'){cp(t.dataset.v);return}
   if(a==='cpmsg'){cp(sheet.msg);return}
+  if(a==='sendmail'){var to=($('#f-to').value||'').trim();sheet.to=to;if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)){toast('Entre une adresse e-mail valide');return}
+    busy=true;t.textContent='Envoi…';var rm=await call({op:'mail',to:to,sujet:'Ton accès Kotrana Coach',corps:sheet.msg});busy=false;
+    if(rm.ok){sheet.sent=to;render();toast('E-mail envoyé')}else{render();toast(rm.e==='limite'?'Limite d’envois du jour atteinte':rm.e==='envoi'?'Envoi refusé par Google':msgErr(rm))}return}
   if(a==='closesheet'){sheet=null;render();return}
   if(a==='role'){keep();sheet.role=t.dataset.r;render();return}
   if(a==='pre'){keep();sheet.jours=+t.dataset.j;sheet.offre=t.dataset.o;render();return}
   if(a==='newtok'){var d=t.dataset.d?D.demandes.filter(function(x){return x.id===t.dataset.d})[0]:null,co=d&&d.coachId==='NEW';
-    sheet={role:co?'c':'m',coachId:d&&!co?d.coachId:(D.coachs[0]||{}).id,nom:d?d.nom:'',demandeId:d?d.id:'',email:co?d.contact:'',offre:'1 mois',jours:30};render();return}
+    sheet={role:co?'c':'m',coachId:d&&!co?d.coachId:(D.coachs[0]||{}).id,nom:d?d.nom:'',demandeId:d?d.id:'',email:d&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.contact)?d.contact:'',offre:'1 mois',jours:30};render();return}
   var need=a==='regen'||a==='refuse';
   if(need&&sure[a+(t.dataset.j||t.dataset.d)]!==1){sure[a+(t.dataset.j||t.dataset.d)]=1;t.textContent='Confirmer ?';setTimeout(function(){sure={};render()},3500);return}
   sure={};busy=true;var r;
