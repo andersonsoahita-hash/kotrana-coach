@@ -81,8 +81,8 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--ln);border-
 }
 @media(min-width:1350px){.grid{grid-template-columns:repeat(3,1fr)}}
 </style></head><body>
-<script>window.ENTREE={name:"KOTRANA",sub:"Admin · by Stephen",lines:["Les demandes.","Les jetons.","Les coachs."],away:5,busy:function(){return !!window.__kcBusy},logo:"icon-192.png",v:"2026.11.04-2214"}</script>
-<script src="entree.js?v=2026.11.04-2214"></script>
+<script>window.ENTREE={name:"KOTRANA",sub:"Admin · by Stephen",lines:["Les demandes.","Les jetons.","Les coachs."],away:5,busy:function(){return !!window.__kcBusy},logo:"icon-192.png",v:"2026.11.04-2218"}</script>
+<script src="entree.js?v=2026.11.04-2218"></script>
 <div id="shell"><aside id="side"></aside><main id="main"></main></div><div id="t"></div>
 <script src="config.js"></script>
 <script>
@@ -156,7 +156,7 @@ function render(){
       +(x.note?'<div class="mu" style="overflow-wrap:anywhere">'+esc(x.note)+'</div>':'')
       +bar(on?j:-1,90)+'<div class="mu">Fin <b>'+esc(x.fin)+'</b>'+(j!=null?' · '+(j<0?'expiré depuis '+(-j)+' j':j+' j restants'):'')+'</div>'
       +'<div class="mu">'+(x.appareil?'Appareil lié : '+esc(x.appareil):'Aucun appareil lié')+(x.dernier?' · vu le '+esc(x.dernier):'')+'</div>'
-      +'<div class="acts"><button class="s" data-a="prol" data-j="'+esc(x.jid)+'" data-n="30">+30 j</button><button class="s" data-a="prol" data-j="'+esc(x.jid)+'" data-n="90">+90 j</button>'
+      +'<div class="acts"><button class="s" data-a="prol" data-j="'+esc(x.jid)+'" data-n="7">+7 j</button><button class="s" data-a="prol" data-j="'+esc(x.jid)+'" data-n="10">+10 j</button><button class="s" data-a="prol" data-j="'+esc(x.jid)+'" data-mo="1">+1 mois</button><button class="s" data-a="prol" data-j="'+esc(x.jid)+'" data-mo="3">+3 mois</button>'
       +'<button class="s" data-a="act" data-j="'+esc(x.jid)+'" data-v="'+(on?'non':'oui')+'">'+(on?'Désactiver':'Réactiver')+'</button>'
       +'<button class="s" data-a="reset" data-j="'+esc(x.jid)+'">Libérer l’appareil</button><button class="s d" data-a="regen" data-j="'+esc(x.jid)+'">Nouveau jeton</button></div></div>'}).join('')+'</div>'
       :'<div class="empty">'+IC.none+'<div>Aucun jeton ne correspond.</div></div>';
@@ -165,7 +165,7 @@ function render(){
     h+=D.coachs.length?'<div class="grid">'+D.coachs.map(function(c){var ad=D.jetons.filter(function(j){return j.coachId===c.id&&j.role==='m'}),on=ad.filter(function(j){var d=jours(j.fin);return j.actif==='oui'&&(d==null||d>=0)}).length;
       return '<div class="card" style="--i:'+(i++)+'"><div class="row"><h3 class="sp">'+esc(c.nom)+'</h3><span class="b ac">'+on+'/'+ad.length+' actifs</span></div>'
       +'<div class="mu" style="margin-top:6px">Code : <b>'+esc(c.code)+'</b></div><div class="mu" style="word-break:break-all">'+esc(link(c.code))+'</div>'
-      +'<div class="acts"><button class="s" data-a="cp" data-v="'+esc(link(c.code))+'">Copier le lien d’inscription</button></div></div>'}).join('')+'</div>'
+      +'<div class="acts"><button class="s" data-a="cp" data-v="'+esc(link(c.code))+'">Copier le lien d’inscription</button><button class="s d" data-a="delc" data-c="'+esc(c.id)+'">Supprimer ce coach</button></div></div>'}).join('')+'</div>'
       :'<div class="empty">'+IC.none+'<div>Aucun coach. Ils apparaissent ici dès que tu crées leur jeton.</div></div>';
   }
   h+='</div>';
@@ -174,8 +174,18 @@ function render(){
   var b=document.createElement('nav');b.id='bar';b.innerHTML=nav('');document.body.appendChild(b);
   var qi=$('#q');if(window.__fq)document.querySelectorAll('.card,.vue').forEach(function(c){c.style.animation='none';c.style.opacity=1;c.style.transform='none'});if(qi&&window.__fq){qi.focus();var l=qi.value.length;qi.setSelectionRange(l,l)}
 }
-var PRE=[['1 mois',30],['3 mois',90],['6 mois',180],['12 mois',365]];
+var PRE=[['7 jours',0,7],['10 jours',0,10]].concat([1,2,3,4,5,6,7,8,9,10,11,12].map(function(m){return[m+' mois',m,0]}));
 function sheetHtml(){
+  if(sheet.del){
+    var d=sheet.del,c=D.coachs.filter(function(x){return x.id===d.id})[0]||{nom:'?'},ad=D.jetons.filter(function(j){return j.coachId===d.id&&j.role==='m'}).length;
+    return '<div class="ov"><div><h3 style="color:var(--no)">Supprimer le coach « '+esc(c.nom)+' »</h3>'
+     +'<div class="hint" style="border:1px solid var(--no);color:var(--tx)"><b>Action définitive, impossible à annuler.</b><br>Seront effacés : le coach et son jeton, ses <b>'+ad+' adhérent(s)</b> avec leurs jetons, toutes leurs séances enregistrées, les vidéos du coach et les demandes liées. Les adhérents perdront l’accès immédiatement.</div>'
+     +(d.step===1?'<label class="chk" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:14px;color:var(--tx)"><input id="f-ok" type="checkbox" style="width:auto;margin-top:3px"'+(d.ok?' checked':'')+'><span>Oui, je veux supprimer ce coach et tous ses adhérents, définitivement.</span></label>'
+        +'<div class="row" style="margin-top:16px"><button class="p sp" data-a="delask">Recevoir le code de validation</button><button data-a="closesheet">Annuler</button></div>'
+       :'<p class="mu" style="margin-top:12px">Un code à 6 chiffres vient d’être envoyé à kotranabysas@gmail.com (valable 10 minutes). Entre-le pour valider.</p><label>Code de validation</label><input id="f-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="font-size:22px;letter-spacing:.3em;text-align:center">'
+        +'<div class="row" style="margin-top:16px"><button class="sp" style="background:var(--no);color:#fff;border:0;font-weight:650" data-a="delgo">Supprimer définitivement</button><button data-a="closesheet">Annuler</button></div>')
+     +'</div></div>';
+  }
   if(sheet.tok){
     var s=sheet,co=s.role==='c',m='Bonjour '+s.nom+',\nvoici ton accès Kotrana Coach :\n\nJeton : '+s.tok+'\nLien : '+s.lien+'\n\nOuvre le lien, choisis « '+(co?'Coach':'Adhérent')+' » et colle ton jeton. Il est valable jusqu’au '+s.fin+' et fonctionne sur un seul téléphone.';
     if(co&&s.code)m+='\n\nTon code coach : '+s.code+'\nLien à donner à tes adhérents pour qu’ils demandent leur jeton :\n'+link(s.code);
@@ -192,15 +202,15 @@ function sheetHtml(){
    +(co?'<div class="hint">Le compte coach est créé automatiquement avec ce nom. Il n’y a rien d’autre à préparer.'+(sheet.email?'<br>E-mail : <b>'+esc(sheet.email)+'</b>':'')+'</div>'
        :(D.coachs.length?'<label>Coach</label><select id="f-coach">'+opts+'</select>':'<div class="hint">Aucun coach pour l’instant : crée d’abord le jeton d’un coach.</div>'))
    +'<label>Nom</label><input id="f-nom" value="'+esc(sheet.nom||'')+'" autocomplete="off">'
-   +'<label>Durée</label><div class="sbtn">'+PRE.map(function(p){return '<button data-a="pre" data-j="'+p[1]+'" data-o="'+p[0]+'" class="'+(+sheet.jours===p[1]?'on':'')+'">'+p[0]+'</button>'}).join('')+'</div>'
-   +'<div class="row" style="margin-top:8px"><div class="sp"><label>Offre</label><input id="f-offre" value="'+esc(sheet.offre||'1 mois')+'"></div><div class="sp"><label>Jours</label><input id="f-j" type="number" min="1" max="800" value="'+esc(sheet.jours||30)+'"></div></div>'
+   +'<label>Durée</label><div class="sbtn">'+PRE.map(function(p){return '<button data-a="pre" data-m="'+p[1]+'" data-j="'+p[2]+'" data-o="'+p[0]+'" class="'+(p[1]?(+sheet.mois===p[1]):(!sheet.mois&&+sheet.jours===p[2]))+'">'+p[0]+'</button>'}).join('').replace(/class="true"/g,'class="on"').replace(/class="false"/g,'class=""')+'</div>'
+   +'<div class="row" style="margin-top:8px"><div class="sp"><label>Offre</label><input id="f-offre" value="'+esc(sheet.offre||'1 mois')+'"></div><div class="sp"><label>'+(sheet.mois?'Mois':'Jours')+'</label><input id="f-j" type="number" min="1" max="'+(sheet.mois?24:800)+'" value="'+esc(sheet.mois||sheet.jours||30)+'"></div></div>'
    +'<div class="row" style="margin-top:16px"><button class="p sp" data-a="mk" '+((!co&&!D.coachs.length)?'disabled':'')+'>Créer le jeton</button><button data-a="closesheet">Annuler</button></div></div></div>';
 }
 function cp(v){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(function(){toast('Copié')},function(){toast('Copie refusée : sélectionne le texte')});
   else toast('Copie indisponible : sélectionne le texte');
 }
-function keep(){if(sheet&&!sheet.tok){var g=function(i){var e=$(i);return e?e.value:null};var n=g('#f-nom'),o=g('#f-offre'),j=g('#f-j'),c=g('#f-coach');if(n!=null)sheet.nom=n;if(o!=null)sheet.offre=o;if(j!=null)sheet.jours=j;if(c)sheet.coachId=c}}
+function keep(){if(sheet&&!sheet.tok){var g=function(i){var e=$(i);return e?e.value:null};var n=g('#f-nom'),o=g('#f-offre'),j=g('#f-j'),c=g('#f-coach');if(n!=null)sheet.nom=n;if(o!=null)sheet.offre=o;if(j!=null){if(sheet.mois)sheet.mois=+j;else sheet.jours=j}if(c)sheet.coachId=c}}
 var sure={};
 async function act(e){
   var t=e.target.closest('[data-a]');if(!t||busy)return;var a=t.dataset.a;
@@ -216,20 +226,27 @@ async function act(e){
     if(rm.ok){sheet.sent=to;render();toast('E-mail envoyé')}else{render();toast(rm.e==='limite'?'Limite d’envois du jour atteinte':rm.e==='envoi'?'Envoi refusé par Google':msgErr(rm))}return}
   if(a==='closesheet'){sheet=null;render();return}
   if(a==='role'){keep();sheet.role=t.dataset.r;render();return}
-  if(a==='pre'){keep();sheet.jours=+t.dataset.j;sheet.offre=t.dataset.o;render();return}
+  if(a==='pre'){keep();sheet.mois=+t.dataset.m||0;sheet.jours=+t.dataset.j||30;sheet.offre=t.dataset.o;render();return}
+  if(a==='delc'){sheet={del:{id:t.dataset.c,step:1,ok:false}};render();return}
+  if(a==='delask'){if(!$('#f-ok').checked){toast('Coche la case pour confirmer');return}
+    busy=true;t.textContent='Envoi du code…';var ra=await call({op:'coachDelAsk',coachId:sheet.del.id});busy=false;
+    if(ra.ok){sheet.del.step=2;render()}else{render();toast(ra.e==='envoi'?'Envoi du code impossible':msgErr(ra))}return}
+  if(a==='delgo'){var cd=($('#f-code').value||'').replace(/\D/g,'');if(cd.length!==6){toast('Entre le code à 6 chiffres');return}
+    busy=true;t.textContent='Suppression…';var rd=await call({op:'coachDel',coachId:sheet.del.id,code:cd});busy=false;
+    if(rd.ok){sheet=null;window.__recount=true;await load(true);toast('Coach supprimé · '+rd.supprime.jetons+' jeton(s) effacé(s)')}else{render();toast(rd.e==='code'?'Code incorrect ou expiré':msgErr(rd))}return}
   if(a==='newtok'){var d=t.dataset.d?D.demandes.filter(function(x){return x.id===t.dataset.d})[0]:null,co=d&&d.coachId==='NEW';
-    sheet={role:co?'c':'m',coachId:d&&!co?d.coachId:(D.coachs[0]||{}).id,nom:d?d.nom:'',demandeId:d?d.id:'',email:d&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.contact)?d.contact:'',offre:'1 mois',jours:30};render();return}
+    sheet={role:co?'c':'m',coachId:d&&!co?d.coachId:(D.coachs[0]||{}).id,nom:d?d.nom:'',demandeId:d?d.id:'',email:d&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.contact)?d.contact:'',offre:'1 mois',mois:1,jours:30};render();return}
   var need=a==='regen'||a==='refuse';
   if(need&&sure[a+(t.dataset.j||t.dataset.d)]!==1){sure[a+(t.dataset.j||t.dataset.d)]=1;t.textContent='Confirmer ?';setTimeout(function(){sure={};render()},3500);return}
   sure={};busy=true;var r;
   if(a==='mk'){
     keep();
-    var o={op:'tokenNew',role:sheet.role,coachId:sheet.role==='c'?'':sheet.coachId,nom:(sheet.nom||'').trim(),offre:sheet.offre,jours:+sheet.jours||30,demandeId:sheet.demandeId};
+    var o={op:'tokenNew',role:sheet.role,coachId:sheet.role==='c'?'':sheet.coachId,nom:(sheet.nom||'').trim(),offre:sheet.offre,mois:sheet.mois?+sheet.mois:0,jours:+sheet.jours||30,demandeId:sheet.demandeId};
     if(!o.nom){toast('Entre un nom');busy=false;return}
     r=await call(o);
     if(r.ok){sheet={tok:r.token,fin:r.fin,nom:o.nom,role:o.role,code:r.coach&&r.coach.code,email:sheet.email,lien:appLink()};await load(true);toast(r.coach?'Compte coach créé':'Jeton créé')}else toast(msgErr(r));
   }
-  else if(a==='prol'){r=await call({op:'tokenSet',jid:t.dataset.j,prolonger:+t.dataset.n});if(r.ok){await load(true);toast('Prolongé jusqu’au '+r.fin)}else toast(msgErr(r))}
+  else if(a==='prol'){r=await call({op:'tokenSet',jid:t.dataset.j,prolonger:+t.dataset.n||0,mois:+t.dataset.mo||0});if(r.ok){await load(true);toast('Prolongé jusqu’au '+r.fin)}else toast(msgErr(r))}
   else if(a==='act'){r=await call({op:'tokenSet',jid:t.dataset.j,actif:t.dataset.v});if(r.ok){await load(true);toast(t.dataset.v==='oui'?'Réactivé':'Désactivé')}else toast(msgErr(r))}
   else if(a==='reset'){r=await call({op:'tokenReset',jid:t.dataset.j});if(r.ok){await load(true);toast('Appareil libéré')}else toast(msgErr(r))}
   else if(a==='regen'){r=await call({op:'tokenRegen',jid:t.dataset.j});if(r.ok){var j=D.jetons.filter(function(x){return x.jid===t.dataset.j})[0]||{};sheet={tok:r.token,fin:j.fin,nom:j.nom||'',role:j.role,lien:appLink()};await load(true);toast('Nouveau jeton créé')}else toast(msgErr(r))}
