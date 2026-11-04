@@ -85,13 +85,14 @@ textarea{padding:10px 12px;min-height:90px}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .chk{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13.5px}.chk input{width:22px;min-height:22px;height:22px;margin-top:1px;flex:none;accent-color:var(--accent)}
 .cgu{max-height:210px;overflow:auto;font-size:13px;line-height:1.5;background:var(--surface2);border-radius:14px;padding:12px 14px;margin-top:10px}.cgu p{margin:0 0 8px}
+.seg{display:flex;gap:6px;margin-top:14px}.seg button{flex:1;padding:10px 8px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600}.seg button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
 .lnk{color:var(--accent);font-weight:600;text-decoration:underline;padding:6px 0;font-size:13.5px}
 .sum{font-size:13px;color:var(--muted);margin-top:4px}
 </style>
 </head>
 <body>
-<script>window.ENTREE={name:"KOTRANA",sub:"Coach · by Stephen",lines:["Ta technique.","Tes charges.","Ton coach."],away:5,choices:function(){try{if(/[#&]t=/.test(location.hash))return null;return localStorage.getItem("kc_token_v1")?null:[{label:"Coach",role:"c"},{label:"Adhérent",role:"m"}]}catch(e){return null}},logo:"icon-192.png",v:"2026.11.04-2203"}</script>
-<script src="entree.js?v=2026.11.04-2203"></script>
+<script>window.ENTREE={name:"KOTRANA",sub:"Coach · by Stephen",lines:["Ta technique.","Tes charges.","Ton coach."],away:5,choices:function(){try{if(/[#&]t=/.test(location.hash))return null;return localStorage.getItem("kc_token_v1")?null:[{label:"Coach",role:"c"},{label:"Adhérent",role:"m"}]}catch(e){return null}},logo:"icon-192.png",v:"2026.11.04-2309"}</script>
+<script src="entree.js?v=2026.11.04-2309"></script>
 <div class="app" id="app"></div><div id="tabs"></div>
 <script src="config.js"></script>
 <script>
@@ -105,7 +106,7 @@ const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg
 const API=(window.KC&&KC.API)||'';
 const CGU=`<p><b>Version provisoire.</b></p><p><b>1. À quoi sert l’app.</b> Suivre tes charges d’entraînement avec les exercices et les vidéos de ton coach. Elle ne remplace pas un avis médical.</p><p><b>2. Données enregistrées.</b> Ton nom, ton contact, ton objectif (facultatif) et tes séances : exercices, charges, répétitions, dates. N’écris aucune information de santé.</p><p><b>3. Qui les voit.</b> Ton coach, pour suivre tes séances, et l’administrateur de l’app (Stephen), pour gérer les accès. Personne d’autre. Elles ne sont pas vendues.</p><p><b>4. Où elles sont.</b> Dans un Google Sheet privé géré par l’administrateur, et sur ton téléphone. L’envoi se fait une fois par jour, le soir.</p><p><b>5. Ton accès.</b> Un jeton personnel, valable selon ton offre, sur un seul téléphone.</p><p><b>6. Tes droits.</b> Tu peux demander à voir, corriger ou supprimer tes données, ou arrêter, en contactant ton coach ou l’administrateur.</p>`;
 /* ---------- stockage ---------- */
-const KEY='kc_state_v2',TK='kc_token_v1',DVK='kc_dev_v1',CDK='kc_code_v1';
+const KEY='kc_state_v2',TK='kc_token_v1',DVK='kc_dev_v1',CDK='kc_code_v1',IDK='kc_id_v1';
 let S;function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
   if(!S||typeof S!=='object')S={};if(!Array.isArray(S.logs))S.logs=[];if(!S.cache)S.cache={me:null,videos:[],adherents:[],suivi:[],suiviTs:''};S.lastSync=S.lastSync||''}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Stockage plein')}}
@@ -131,7 +132,7 @@ const EX=()=>(S.cache.videos||[]).map(v=>({id:v.id,n:v.exo,m:String(v.muscle).sp
 const exById=id=>EX().find(x=>x.id===id);
 const lastLog=id=>{for(let i=S.logs.length-1;i>=0;i--)if(S.logs[i].ex===id)return S.logs[i];return null};
 const pending=()=>S.logs.filter(l=>!l.synced);
-const MSG={token:'Jeton invalide. Vérifie que tu l’as copié en entier.',desactive:'Cet accès est désactivé. Contacte ton coach.',appareil:'Ce jeton est déjà lié à un autre téléphone. Demande à ton coach de le libérer.',reseau:'Connexion impossible pour le moment. Réessaie avec du réseau.',conf:'Application non configurée.',role:'Action non autorisée.',occupe:'Serveur occupé, réessaie dans un instant.',erreur:'Erreur du serveur, réessaie.',donnees:'Remplis ton nom et ton contact.',cgu:'Il faut accepter les conditions.',coach:'Code coach inconnu. Vérifie le code ou le lien reçu.',limite:'Trop de demandes aujourd’hui, réessaie demain.',email:'Entre une adresse e-mail valide : c’est là que ton jeton te sera confirmé.',url:'Le lien doit commencer par https://'};
+const MSG={token:'Jeton invalide. Vérifie que tu l’as copié en entier.',desactive:'Cet accès est désactivé. Contacte ton coach.',appareil:'Ce jeton est déjà lié à un autre téléphone. Demande à ton coach de le libérer.',reseau:'Connexion impossible pour le moment. Réessaie avec du réseau.',conf:'Application non configurée.',role:'Action non autorisée.',occupe:'Serveur occupé, réessaie dans un instant.',erreur:'Erreur du serveur, réessaie.',donnees:'Remplis ton nom et ton contact.',cgu:'Il faut accepter les conditions.',coach:'Code coach inconnu. Vérifie le code ou le lien reçu.',limite:'Trop de demandes aujourd’hui, réessaie demain.',ident:'Identifiant ou mot de passe incorrect.',verrouille:'Trop d’essais. Utilise « Mot de passe oublié » pour demander un nouveau jeton.',mdpcourt:'Le mot de passe doit contenir au moins 8 caractères.',emailpris:'Cette adresse e-mail est déjà utilisée.',email:'Entre une adresse e-mail valide : c’est là que ton jeton te sera confirmé.',url:'Le lien doit commencer par https://'};
 const errMsg=r=>r.e==='expire'?'Cet accès a expiré'+(r.fin?' le '+frl(r.fin):'')+'. Demande un renouvellement à ton coach.':(MSG[r.e]||'Erreur : '+r.e);
 /* ---------- vues ---------- */
 const brand=`<div class="brand"><img class="logo" src="${LOGO}" alt=""><div><b>KOTRANA<i>by Stephen</i></b><small>Coach · technique et charges</small></div></div>`;
@@ -139,11 +140,19 @@ function head(){const left=daysLeft(ME.fin);
   return `<div class="head">${brand}<span class="pill">${isCoach()?'Coach':left+' j'}</span></div>${!isCoach()&&left<=5?`<div class="note warn">Ton accès se termine dans ${left} jour${left>1?'s':''}. Demande un renouvellement à ton coach.</div>`:''}`}
 function gateView(){const g=GATE,msg=g.msg?`<div class="note bad">${esc(g.msg)}</div>`:'';
   if(g.mode==='choose')return `<div class="gate">${brand}<div class="card hero"><h3>Bienvenue</h3><p class="muted small" style="margin-top:6px">Choisis ton espace.</p><div class="stack" style="margin-top:16px"><button class="btn pri" data-a="gate" data-m="c">Coach</button><button class="btn sec" data-a="gate" data-m="m">Adhérent</button></div></div></div>`;
-  if(g.mode==='c'||g.mode==='m'){const co=g.mode==='c';
-    return `<div class="gate">${brand}<div class="card hero"><h3>${co?'Espace coach':'Espace adhérent'}</h3><p class="muted small" style="margin-top:6px">${co?'Entre le jeton coach que tu as reçu.':'Entre ton jeton. Si ton coach t’a envoyé un lien, tu n’as rien à faire.'}</p>
-    <div class="field"><label for="tk">Jeton d’accès</label><textarea id="tk" rows="3" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">${esc(g.tok)}</textarea></div>${msg}
-    <button class="btn pri" style="margin-top:14px" data-a="enter" ${UI.busy?'disabled':''}>${UI.busy?'Vérification…':'Entrer'}</button>
-    <button class="lnk" data-a="gate" data-m="${co?'creq':'req'}" style="margin-top:8px">${co?'Créer mon compte coach':'Je n’ai pas encore de jeton'}</button><br><button class="lnk" data-a="gate" data-m="choose">Retour</button></div></div>`}
+  if(g.mode==='c'||g.mode==='m'){const co=g.mode==='c',pw=g.how==='pw';
+    const seg=`<div class="seg"><button data-a="how" data-h="pw" class="${pw?'on':''}">Mot de passe</button><button data-a="how" data-h="tok" class="${pw?'':'on'}">Jeton · 1re connexion</button></div>`;
+    const body=pw?`<div class="field"><label for="li">Identifiant ou e-mail</label><input id="li" value="${esc(g.id||'')}" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+    <div class="field"><label for="lp">Mot de passe</label><input id="lp" type="password" autocomplete="current-password"></div>${msg}
+    <button class="btn pri" style="margin-top:14px" data-a="login" ${UI.busy?'disabled':''}>${UI.busy?'Connexion…':'Me connecter'}</button><button class="lnk" data-a="forgot" style="margin-top:8px">Mot de passe oublié</button>`
+    :`<div class="field"><label for="tk">Jeton d’accès</label><textarea id="tk" rows="3" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">${esc(g.tok)}</textarea></div>${msg}
+    <button class="btn pri" style="margin-top:14px" data-a="enter" ${UI.busy?'disabled':''}>${UI.busy?'Vérification…':'Entrer'}</button>`;
+    return `<div class="gate">${brand}<div class="card hero"><h3>${co?'Espace coach':'Espace adhérent'}</h3><p class="muted small" style="margin-top:6px">${pw?'Connecte-toi avec ton identifiant (ou ton e-mail) et ton mot de passe.':(co?'Entre le jeton coach que tu as reçu. Tu créeras ensuite ton mot de passe.':'Entre le jeton reçu de ton coach. Tu créeras ensuite ton mot de passe.')}</p>${seg}${body}
+    <br><button class="lnk" data-a="gate" data-m="${co?'creq':'req'}" style="margin-top:8px">${co?'Créer mon compte coach':'Je n’ai pas encore de jeton'}</button><br><button class="lnk" data-a="gate" data-m="choose">Retour</button></div></div>`}
+  if(g.mode==='forgot'){return `<div class="gate">${brand}<div class="card hero"><h3>Mot de passe oublié</h3><p class="muted small" style="margin-top:6px">Entre ton identifiant ou ton e-mail. L’administrateur recevra ta demande et t’enverra un nouveau jeton pour recréer ton mot de passe.</p>
+    <div class="field"><label for="li">Identifiant ou e-mail</label><input id="li" value="${esc(g.id||'')}" autocapitalize="none" spellcheck="false"></div>${msg}
+    <button class="btn pri" style="margin-top:14px" data-a="sendforgot" ${UI.busy?'disabled':''}>${UI.busy?'Envoi…':'Envoyer la demande'}</button><button class="lnk" data-a="gate" data-m="m" style="margin-top:8px">Retour</button></div></div>`}
+  if(g.mode==='fsent'){return `<div class="gate">${brand}<div class="card hero"><h3>Demande envoyée</h3><p class="muted small" style="margin-top:8px">Si cet identifiant existe, l’administrateur a été prévenu. Tu recevras un nouveau jeton : utilise-le dans l’onglet « Jeton · 1re connexion », puis recrée ton mot de passe.</p><button class="btn pri" style="margin-top:16px" data-a="how" data-h="tok">J’ai mon nouveau jeton</button></div></div>`}
   if(g.mode==='req'){const q=g.req;
     return `<div class="gate" style="min-height:0;padding-top:8px">${brand}<div class="card hero"><h3>Demander un jeton</h3><p class="muted small" style="margin-top:6px">Ton jeton te sera créé par l’administrateur, puis transmis par ton coach.</p>
     <div class="field"><label for="rc">Code de ton coach</label><input id="rc" value="${esc(q.code||'')}" placeholder="Ex : F34BD1" autocapitalize="characters" autocomplete="off"></div>
@@ -222,22 +231,31 @@ function accountView(){const p=ME,link=new URL('index.html',location.href);link.
   return head()+`<h2 style="margin-top:4px">Mon compte</h2><div class="card"><div class="small muted">Nom</div><b style="font-family:var(--fd)">${esc(p.n||'–')}</b>${p.coach&&!isCoach()?`<div class="small muted" style="margin-top:12px">Coach</div><b style="font-family:var(--fd)">${esc(p.coach)}</b>`:''}${p.offre?`<div class="small muted" style="margin-top:12px">Offre</div><b style="font-family:var(--fd)">${esc(p.offre)}</b>`:''}<div class="small muted" style="margin-top:12px">Accès valable jusqu’au</div><b style="font-family:var(--fd)">${frl(p.fin)}</b> <span class="muted small">(${daysLeft(p.fin)} jours)</span></div>
   ${isCoach()?`<h2>Inscrire des adhérents</h2><div class="card"><div class="small muted">Code d’inscription</div><b style="font-family:var(--fd);font-size:20px">${esc(p.code)}</b><p class="small muted" style="margin-top:10px;word-break:break-all">${esc(link.href)}</p><button class="btn sec" style="margin-top:10px" data-a="copy" data-v="${esc(link.href)}">Copier le lien d’inscription</button></div>`
   :`<h2>Synchronisation</h2><div class="card"><p class="small">${pend?pend+' séance'+(pend>1?'s':'')+' en attente d’envoi.':'Tout est envoyé.'}</p><p class="tiny muted" style="margin-top:4px">Envoi automatique le soir, à partir de 20 h, quand tu ouvres l’app.${S.lastSync?' Dernier envoi : '+esc(S.lastSync)+'.':''}</p><button class="btn sec" style="margin-top:10px" data-a="syncnow" ${UI.busy?'disabled':''}>${UI.busy?'Envoi…':'Synchroniser maintenant'}</button></div>`}
+  <h2>Connexion</h2><div class="card"><div class="small muted">Identifiant</div><b style="font-family:var(--fd)">${esc(p.uid||'–')}</b>${p.email?`<div class="small muted" style="margin-top:10px">E-mail</div><b>${esc(p.email)}</b>`:''}<button class="btn ghost" style="margin-top:12px" data-a="pwopen">${p.needPw?'Créer mon mot de passe':'Changer mon mot de passe'}</button></div>
   <div class="stack" style="margin-top:12px"><button class="btn ghost" data-a="reload">Actualiser les exercices</button><button class="btn ghost" data-a="logout">${UI.sure?'Confirmer la déconnexion':'Me déconnecter'}</button></div><p class="tiny muted" style="margin-top:16px">Kotrana Coach by Stephen. Ton jeton reste lié à ce téléphone.</p>`}
+function pwView(){const p=ME,msg=UI.pwMsg?`<div class="note bad">${esc(UI.pwMsg)}</div>`:'';
+  return `<div class="gate" style="min-height:0;padding-top:8px">${brand}<div class="card hero"><h3>${p.needPw?'Crée ton mot de passe':'Changer mon mot de passe'}</h3><p class="muted small" style="margin-top:6px">Ensuite, tu te connectes avec ton identifiant ou ton e-mail, sans retaper ton jeton. Ton identifiant : <b>${esc(p.uid||'')}</b></p>
+  <div class="field"><label for="pe">E-mail (facultatif, utilisable comme identifiant)</label><input id="pe" type="email" value="${esc(UI.pwEm!=null?UI.pwEm:(p.email||''))}" autocomplete="email" autocapitalize="none"></div>
+  <div class="field"><label for="p1">Nouveau mot de passe (8 caractères minimum)</label><input id="p1" type="password" autocomplete="new-password"></div>
+  <div class="field"><label for="p2">Confirme le mot de passe</label><input id="p2" type="password" autocomplete="new-password"></div>${msg}
+  <button class="btn pri" style="margin-top:14px" data-a="savepw" ${UI.busy?'disabled':''}>${UI.busy?'Enregistrement…':'Enregistrer'}</button><button class="lnk" data-a="skippw" style="margin-top:8px">Plus tard</button></div></div>`}
 function tabsHtml(){const t=isCoach()?[['ex','Exercices','ex'],['suivi','Suivi','suivi'],['acc','Moi','user']]:[['home','Accueil','home'],['ex','Exercices','ex'],['hist','Historique','hist'],['acc','Moi','user']];
   return `<div class="tabbar"><nav class="tabs">${t.map(x=>`<button class="tab ${UI.tab===x[0]&&!UI.ex?'on':''}" data-a="tab" data-t="${x[0]}">${ic(x[2])}<span>${x[1]}</span></button>`).join('')}</nav></div>`}
 function render(){const app=$('#app');
   if(!ME){app.innerHTML=gateView();$('#tabs').innerHTML='';return}
+  if(UI.pw){app.innerHTML=pwView();$('#tabs').innerHTML='';return}
   let h;
   if(UI.edit)h=formView();else if(UI.ex)h=exoView();
   else h=({home:homeView,ex:exView,hist:histView,suivi:suiviView,acc:accountView}[UI.tab]||(isCoach()?exView:homeView))();
   app.innerHTML=h;$('#tabs').innerHTML=UI.edit?'':tabsHtml()}
 /* ---------- connexion ---------- */
-function applyAuth(r){S.cache.me={n:r.nom,r:r.role,fin:r.fin,coach:r.coach,code:r.code||'',offre:r.offre||''};S.cache.videos=r.videos||[];S.cache.adherents=r.adherents||[];save();ME=S.cache.me;
+function applyAuth(r){S.cache.me={n:r.nom,r:r.role,fin:r.fin,coach:r.coach,code:r.code||'',offre:r.offre||'',uid:r.uid||'',email:r.email||'',needPw:!!r.needPw};S.cache.videos=r.videos||[];S.cache.adherents=r.adherents||[];save();ME=S.cache.me;
   if(!UI.tab||(isCoach()&&UI.tab==='home')||(!isCoach()&&UI.tab==='suivi'))UI.tab=isCoach()?'suivi':'home'}
 async function tryEnter(tok,silent){
   tok=String(tok||'').trim().toUpperCase();if(!tok)return;UI.busy=true;if(!ME)render();
   const r=await api({a:'auth',t:tok,dev:dev()});UI.busy=false;
-  if(r.ok){setTok(tok);GATE.msg='';applyAuth(r);UI.tab=isCoach()?'suivi':'home';render();autoSync();if(isCoach())loadSuivi(true);return}
+  if(r.ok){setTok(tok);GATE.msg='';applyAuth(r);UI.tab=isCoach()?'suivi':'home';if(r.needPw&&UI.fresh){UI.pw=true;UI.pwMsg=''}UI.fresh=false;render();autoSync();if(isCoach())loadSuivi(true);return}
+  UI.fresh=false;
   if(r.e==='reseau'&&getTok()===tok&&S.cache.me&&S.cache.me.fin>=today()){ME=S.cache.me;UI.tab=isCoach()?'suivi':'home';render();toast('Hors connexion');return}
   if(r.e!=='reseau'&&r.e!=='occupe'&&r.e!=='erreur'){setTok('');}
   ME=null;GATE.tok=tok;GATE.msg=errMsg(r);if(GATE.mode==='choose'||GATE.mode==='req'||GATE.mode==='sent'||GATE.mode==='csent'||GATE.mode==='creq')GATE.mode=GATE.mode==='csent'||GATE.mode==='creq'?'c':'m';render()}
@@ -270,7 +288,21 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]
   switch(a){
   case 'gate':if(GATE.mode==='req'||GATE.mode==='creq')readReq();GATE.mode=d.m;GATE.msg='';render();break;
   case 'cgu':readReq();UI.showCgu=!UI.showCgu;render();break;
-  case 'enter':GATE.tok=$('#tk').value;await tryEnter(GATE.tok);break;
+  case 'enter':GATE.tok=$('#tk').value;UI.fresh=true;await tryEnter(GATE.tok);break;
+  case 'how':GATE.how=d.h;GATE.mode=(GATE.mode==='c'?'c':'m');GATE.msg='';render();break;
+  case 'login':{const id=($('#li').value||'').trim(),pw=$('#lp').value||'';GATE.id=id;if(!id||!pw){GATE.msg='Entre ton identifiant et ton mot de passe.';render();break}
+    UI.busy=true;GATE.msg='';render();const r=await api({a:'login',id,pw,dev:dev()});UI.busy=false;
+    if(r.ok){setTok(r.token);try{localStorage.setItem(IDK,r.uid||id)}catch(e){}GATE.msg='';applyAuth(r);UI.tab=isCoach()?'suivi':'home';render();autoSync();if(isCoach())loadSuivi(true)}
+    else{GATE.msg=errMsg(r);render()}break}
+  case 'forgot':GATE.id=($('#li')?$('#li').value:'').trim();GATE.mode='forgot';GATE.msg='';render();break;
+  case 'sendforgot':{const id=($('#li').value||'').trim();GATE.id=id;if(!id){GATE.msg='Entre ton identifiant ou ton e-mail.';render();break}
+    UI.busy=true;render();const r=await api({a:'oubli',id});UI.busy=false;if(r.ok){GATE.mode='fsent';GATE.msg=''}else GATE.msg=errMsg(r);render();break}
+  case 'pwopen':UI.pw=true;UI.pwMsg='';UI.pwEm=null;render();break;
+  case 'skippw':UI.pw=false;UI.pwEm=null;render();break;
+  case 'savepw':{const em=($('#pe').value||'').trim(),a=$('#p1').value||'',b2=$('#p2').value||'';UI.pwEm=em;
+    if(a.length<8){UI.pwMsg=MSG.mdpcourt;render();break}if(a!==b2){UI.pwMsg='Les deux mots de passe sont différents.';render();break}
+    UI.busy=true;UI.pwMsg='';render();const r=await api({a:'mdpSet',t:getTok(),dev:dev(),pw:a,email:em});UI.busy=false;
+    if(r.ok){try{localStorage.setItem(IDK,r.uid)}catch(e){}ME.needPw=false;ME.uid=r.uid;ME.email=r.email||'';S.cache.me=ME;save();UI.pw=false;UI.pwEm=null;GATE.how='pw';render();toast('Mot de passe enregistré')}else{UI.pwMsg=errMsg(r);render()}break}
   case 'sendcreq':{readReq();const q=GATE.req;if(!q.nom||!q.contact){GATE.msg='Remplis ton nom et ton adresse e-mail.';render();break}
     if(!q.cgu){GATE.msg=MSG.cgu;render();break}
     UI.busy=true;GATE.msg='';render();const r=await api({a:'demande',role:'c',nom:q.nom,contact:q.contact,infos:q.infos,cgu:true});UI.busy=false;
@@ -302,7 +334,7 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]
   case 'syncnow':await doSync(true);break;
   case 'reload':if(await reloadAuth())toast('Exercices à jour');break;
   case 'copy':try{await navigator.clipboard.writeText(d.v);toast('Lien copié')}catch(e){toast('Copie refusée : sélectionne le texte')}break;
-  case 'logout':if(!UI.sure){UI.sure=true;render();break}UI.sure=false;setTok('');ME=null;GATE={mode:'choose',msg:'',tok:'',req:{}};render();break;
+  case 'logout':if(!UI.sure){UI.sure=true;render();break}UI.sure=false;setTok('');ME=null;GATE={mode:'choose',msg:'',tok:'',req:{},how:GATE.how,id:''};UI.pw=false;render();break;
   }});
 /* ---------- démarrage ---------- */
 window.addEventListener('entree:enter',e=>{const r=e.detail&&e.detail.role;if(!ME&&(r==='c'||r==='m')){GATE.mode=r;GATE.msg='';render()}});
@@ -311,7 +343,8 @@ window.addEventListener('entree:enter',e=>{const r=e.detail&&e.detail.role;if(!M
   try{const q=new URLSearchParams(location.search),c=(q.get('c')||'').trim().toUpperCase();if(c){localStorage.setItem(CDK,c)}if(q.has('c')||q.has('u')){history.replaceState(null,'',location.pathname+location.hash)}}catch(e){}
   try{GATE.req={code:localStorage.getItem(CDK)||''}}catch(e){}
   let tok=null;const m=location.hash.match(/[#&]t=([^&]+)/);
-  if(m){tok=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname+location.search)}
+  try{GATE.how=localStorage.getItem(IDK)?'pw':'tok'}catch(e){GATE.how='tok'}
+  if(m){UI.fresh=true;tok=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname+location.search)}
   if(!tok)tok=getTok();
   if(GATE.req.code&&!tok){GATE.mode='req'}
   if(tok){await tryEnter(tok)}else render()})();
