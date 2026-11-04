@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Kotrana Coach · Admin</title>
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--bg:#eef5fc;--card:#fff;--tx:#0b1f33;--mu:#587089;--ln:#cfe0f0;--ac:#0b84d8;--ac2:#5bbcf3;--ok:#14803c;--no:#c0392b;--wa:#b86e00}
+@media(prefers-color-scheme:dark){:root{--bg:#08141f;--card:#0f2234;--tx:#e8f2fb;--mu:#8fa8c0;--ln:#1d3a55;--ac:#3aa6f0;--ac2:#1d6fa8;--ok:#4cc57d;--no:#ff7b6b;--wa:#f0b04a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+.w{max-width:720px;margin:0 auto}h1{font-size:22px;margin:6px 0 2px}.sub{color:var(--mu);font-size:13px;margin:0 0 14px}.sub b{color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:18px;padding:14px;margin:10px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sp{flex:1}
+button{font:inherit;border:1px solid var(--ln);background:var(--card);color:var(--tx);border-radius:12px;padding:8px 12px;cursor:pointer}
+button.p{background:linear-gradient(135deg,var(--ac2),var(--ac));color:#fff;border:0;font-weight:600}button.d{color:var(--no)}button.s{padding:6px 10px;font-size:13px}
+input,select,textarea{font:inherit;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--ln);background:var(--bg);color:var(--tx)}
+label{display:block;font-size:12px;color:var(--mu);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.06em}
+.tabs{display:flex;gap:6px;margin:8px 0}.tabs button{flex:1}.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.b{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--ln);color:var(--mu)}.b.ok{color:var(--ok);border-color:var(--ok)}.b.no{color:var(--no);border-color:var(--no)}.b.wa{color:var(--wa);border-color:var(--wa)}
+h3{margin:0;font-size:16px}.mu{color:var(--mu);font-size:13px}
+.tok{font:600 20px ui-monospace,Menlo,monospace;letter-spacing:.04em;word-break:break-all;background:var(--bg);border:1px dashed var(--ac);border-radius:12px;padding:12px;text-align:center;margin:10px 0}
+pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:10px;font:13px/1.4 inherit;margin:8px 0}
+.sh{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-end;justify-content:center;z-index:9}.sh>div{background:var(--card);width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px max(24px,env(safe-area-inset-bottom))}
+#t{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:90%}#t.on{opacity:1}
+</style></head><body><div class="w" id="app"></div><div id="t"></div>
+<script src="config.js"></script>
+<script>
+(function(){
+var API=(window.KC&&window.KC.API)||'',KEY='',D=null,tab='dem',sheet=null,busy=false;
+try{KEY=sessionStorage.getItem('kc_admin')||''}catch(e){}
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(m){var t=$('#t');t.textContent=m;t.className='on';clearTimeout(toast.k);toast.k=setTimeout(function(){t.className=''},2600)}
+var ERR={cle:'Clé admin incorrecte',donnees:'Informations incomplètes',inconnu:'Introuvable',occupe:'Serveur occupé, réessaie',erreur:'Erreur du serveur',action:'Action inconnue'};
+async function call(o){
+  try{var r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({a:'adm',cle:KEY},o))});return await r.json()}
+  catch(e){console.error('kc-api',e&&e.message);return{ok:false,e:'reseau'}}
+}
+function msgErr(r){return r.e==='reseau'?'Pas de connexion au serveur':(ERR[r.e]||'Erreur : '+r.e)}
+async function load(quiet){
+  var r=await call({op:'list'});
+  if(!r.ok){if(r.e==='cle'){KEY='';try{sessionStorage.removeItem('kc_admin')}catch(e){}}toast(msgErr(r));D=null;render();return}
+  D=r;render();if(!quiet)toast('À jour')
+}
+function coachNom(id){var c=D.coachs.filter(function(x){return x.id===id})[0];return c?c.nom:'?'}
+function jours(fin){if(!fin)return null;return Math.round((new Date(fin+'T12:00:00Z')-new Date(D.auj+'T12:00:00Z'))/864e5)}
+function link(code){var u=new URL('index.html',location.href);u.search='?c='+encodeURIComponent(code);return u.href}
+function head(){return '<h1>Kotrana Coach <span class="mu">· Admin</span></h1><p class="sub">by <b>Stephen</b></p>'}
+function render(){
+  var A=$('#app');
+  if(!API){A.innerHTML=head()+'<div class="card">Adresse du serveur manquante dans config.js.</div>';return}
+  if(!KEY||!D){
+    A.innerHTML=head()+'<div class="card"><label for="k">Clé admin</label><input id="k" type="password" autocomplete="current-password" placeholder="Colle ta clé"><div class="row" style="margin-top:12px"><button class="p sp" data-a="login">Entrer</button></div></div>';return}
+  var nd=D.demandes.filter(function(x){return x.statut==='en attente'}).length;
+  var h=head()+'<div class="row"><span class="mu sp">'+esc(D.jetons.length)+' jeton(s) · '+esc(D.coachs.length)+' coach(s)</span><button class="s" data-a="refresh">Actualiser</button><button class="s" data-a="logout">Quitter</button></div>'
+   +'<div class="tabs"><button data-a="tab" data-t="dem" class="'+(tab==='dem'?'on':'')+'">Demandes'+(nd?' ('+nd+')':'')+'</button><button data-a="tab" data-t="jet" class="'+(tab==='jet'?'on':'')+'">Jetons</button><button data-a="tab" data-t="coa" class="'+(tab==='coa'?'on':'')+'">Coachs</button></div>';
+  if(tab==='dem'){
+    var L=D.demandes.slice().reverse();
+    h+=L.length?L.map(function(x){var att=x.statut==='en attente';
+      return '<div class="card"><div class="row"><h3 class="sp">'+esc(x.nom)+'</h3><span class="b '+(att?'wa':x.statut==='jeton créé'?'ok':'no')+'">'+esc(x.statut)+'</span></div>'
+      +'<div class="mu">'+esc(x.contact)+' · coach : '+esc(coachNom(x.coachId))+'</div><div class="mu">'+esc(x.date)+' · CGU '+esc(x.cgu)+'</div>'
+      +(x.infos?'<div style="margin-top:6px">'+esc(x.infos)+'</div>':'')
+      +(att?'<div class="row" style="margin-top:10px"><button class="p s" data-a="newtok" data-d="'+esc(x.id)+'">Créer le jeton</button><button class="s d" data-a="refuse" data-d="'+esc(x.id)+'">Refuser</button></div>':'')+'</div>'}).join(''):'<div class="card mu">Aucune demande pour le moment.</div>';
+  }
+  if(tab==='jet'){
+    var J=D.jetons.slice().sort(function(a,b){return (coachNom(a.coachId)+(a.role==='c'?'0':'1')+a.nom).localeCompare(coachNom(b.coachId)+(b.role==='c'?'0':'1')+b.nom)});
+    h+='<div class="row"><button class="p sp" data-a="newtok">+ Nouveau jeton</button></div>';
+    h+=J.length?J.map(function(x){var j=jours(x.fin),exp=j!=null&&j<0,on=x.actif==='oui';
+      return '<div class="card"><div class="row"><h3 class="sp">'+esc(x.nom)+'</h3><span class="b">'+(x.role==='c'?'coach':'adhérent')+'</span><span class="b '+(!on?'no':exp?'no':j!=null&&j<=5?'wa':'ok')+'">'+(!on?'désactivé':exp?'expiré':'actif')+'</span></div>'
+      +'<div class="mu">'+esc(coachNom(x.coachId))+(x.offre?' · '+esc(x.offre):'')+'</div>'
+      +'<div class="mu">Fin : <b>'+esc(x.fin)+'</b>'+(j!=null?' ('+(j<0?'il y a '+(-j)+' j':j+' j restants')+')':'')+' · appareil lié : '+esc(x.appareil)+(x.dernier?' · vu le '+esc(x.dernier):'')+'</div>'
+      +'<div class="row" style="margin-top:10px"><button class="s" data-a="prol" data-j="'+esc(x.jid)+'" data-n="30">+30 j</button><button class="s" data-a="prol" data-j="'+esc(x.jid)+'" data-n="90">+90 j</button>'
+      +'<button class="s" data-a="act" data-j="'+esc(x.jid)+'" data-v="'+(on?'non':'oui')+'">'+(on?'Désactiver':'Réactiver')+'</button>'
+      +'<button class="s" data-a="reset" data-j="'+esc(x.jid)+'">Libérer l’appareil</button><button class="s d" data-a="regen" data-j="'+esc(x.jid)+'">Nouveau jeton</button></div></div>'}).join(''):'<div class="card mu">Aucun jeton.</div>';
+  }
+  if(tab==='coa'){
+    h+='<div class="card"><label for="cn">Nouveau coach</label><div class="row"><input id="cn" class="sp" placeholder="Nom du coach" style="width:auto;flex:1"><button class="p" data-a="addcoach">Ajouter</button></div></div>';
+    h+=D.coachs.map(function(c){var n=D.jetons.filter(function(j){return j.coachId===c.id&&j.role==='m'}).length;
+      return '<div class="card"><div class="row"><h3 class="sp">'+esc(c.nom)+'</h3><span class="b">'+n+' adhérent(s)</span></div><div class="mu">Code : <b>'+esc(c.code)+'</b></div><div class="mu" style="word-break:break-all">'+esc(link(c.code))+'</div><div class="row" style="margin-top:8px"><button class="s" data-a="cp" data-v="'+esc(link(c.code))+'">Copier le lien d’inscription</button></div></div>'}).join('');
+  }
+  A.innerHTML=h+(sheet?sheetHtml():'');
+}
+function sheetHtml(){
+  if(sheet.tok){
+    var s=sheet,m='Bonjour '+s.nom+',\nvoici ton accès Kotrana Coach :\n\nJeton : '+s.tok+'\nLien : '+s.lien+'\n\nOuvre le lien, choisis « Adhérent » et colle ton jeton. Il est valable jusqu’au '+s.fin+' et fonctionne sur un seul téléphone.';
+    if(s.role==='c')m=m.replace('choisis « Adhérent »','choisis « Coach »');
+    s.msg=m;
+    return '<div class="sh"><div><h3>Jeton créé · '+esc(s.nom)+'</h3><p class="mu">Il ne sera plus jamais affiché. Copie-le maintenant.</p><div class="tok">'+esc(s.tok)+'</div><div class="row"><button class="p sp" data-a="cp" data-v="'+esc(s.tok)+'">Copier le jeton</button></div><label>Message prêt à envoyer</label><pre>'+esc(m)+'</pre><div class="row"><button class="sp" data-a="cpmsg">Copier le message</button><button data-a="closesheet">Fermer</button></div></div></div>';
+  }
+  var opts=D.coachs.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===sheet.coachId?' selected':'')+'>'+esc(c.nom)+'</option>'}).join('');
+  return '<div class="sh"><div><h3>Nouveau jeton</h3>'+(D.coachs.length?'':'<p class="mu">Ajoute d’abord un coach (onglet Coachs).</p>')
+   +'<label>Rôle</label><select id="f-role"><option value="m"'+(sheet.role==='m'?' selected':'')+'>Adhérent</option><option value="c"'+(sheet.role==='c'?' selected':'')+'>Coach</option></select>'
+   +'<label>Coach</label><select id="f-coach">'+opts+'</select><label>Nom</label><input id="f-nom" value="'+esc(sheet.nom||'')+'">'
+   +'<label>Offre</label><input id="f-offre" value="'+esc(sheet.offre||'1 mois')+'" placeholder="1 mois, 3 mois…"><label>Durée (jours)</label><input id="f-j" type="number" min="1" max="800" value="'+esc(sheet.jours||30)+'">'
+   +'<div class="row" style="margin-top:14px"><button class="p sp" data-a="mk">Créer le jeton</button><button data-a="closesheet">Annuler</button></div></div></div>';
+}
+function cp(v){
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(function(){toast('Copié')},function(){toast('Copie refusée : sélectionne le texte')});
+  else toast('Copie indisponible : sélectionne le texte');
+}
+var sure={};
+async function act(e){
+  var t=e.target.closest('[data-a]');if(!t||busy)return;var a=t.dataset.a;
+  if(a==='login'){KEY=$('#k').value.trim();if(!KEY)return;try{sessionStorage.setItem('kc_admin',KEY)}catch(x){}busy=true;await load(true);busy=false;return}
+  if(a==='logout'){KEY='';D=null;try{sessionStorage.removeItem('kc_admin')}catch(x){}render();return}
+  if(a==='refresh'){busy=true;await load();busy=false;return}
+  if(a==='tab'){tab=t.dataset.t;render();return}
+  if(a==='cp'){cp(t.dataset.v);return}
+  if(a==='cpmsg'){cp(sheet.msg);return}
+  if(a==='closesheet'){sheet=null;render();return}
+  if(a==='newtok'){var d=t.dataset.d?D.demandes.filter(function(x){return x.id===t.dataset.d})[0]:null;
+    sheet={role:'m',coachId:d?d.coachId:(D.coachs[0]||{}).id,nom:d?d.nom:'',demandeId:d?d.id:''};render();return}
+  var need=a==='regen'||a==='refuse';
+  if(need&&sure[a+(t.dataset.j||t.dataset.d)]!==1){sure[a+(t.dataset.j||t.dataset.d)]=1;t.textContent='Confirmer ?';setTimeout(function(){sure={};render()},3500);return}
+  sure={};busy=true;var r;
+  if(a==='mk'){
+    var o={op:'tokenNew',role:$('#f-role').value,coachId:$('#f-coach').value,nom:$('#f-nom').value,offre:$('#f-offre').value,jours:+$('#f-j').value||30,demandeId:sheet.demandeId};
+    r=await call(o);
+    if(r.ok){sheet={tok:r.token,fin:r.fin,nom:o.nom,role:o.role,lien:new URL('index.html',location.href).href};await load(true);toast('Jeton créé')}else toast(msgErr(r));
+  }else if(a==='addcoach'){r=await call({op:'coachAdd',nom:$('#cn').value});if(r.ok){await load(true);toast('Coach ajouté')}else toast(msgErr(r))}
+  else if(a==='prol'){r=await call({op:'tokenSet',jid:t.dataset.j,prolonger:+t.dataset.n});if(r.ok){await load(true);toast('Prolongé jusqu’au '+r.fin)}else toast(msgErr(r))}
+  else if(a==='act'){r=await call({op:'tokenSet',jid:t.dataset.j,actif:t.dataset.v});if(r.ok){await load(true);toast(t.dataset.v==='oui'?'Réactivé':'Désactivé')}else toast(msgErr(r))}
+  else if(a==='reset'){r=await call({op:'tokenReset',jid:t.dataset.j});if(r.ok){await load(true);toast('Appareil libéré')}else toast(msgErr(r))}
+  else if(a==='regen'){r=await call({op:'tokenRegen',jid:t.dataset.j});if(r.ok){var j=D.jetons.filter(function(x){return x.jid===t.dataset.j})[0]||{};sheet={tok:r.token,fin:j.fin,nom:j.nom||'',role:j.role,lien:new URL('index.html',location.href).href};await load(true);toast('Nouveau jeton créé')}else toast(msgErr(r))}
+  else if(a==='refuse'){r=await call({op:'demandeSet',id:t.dataset.d,statut:'refusée'});if(r.ok){await load(true);toast('Demande refusée')}else toast(msgErr(r))}
+  busy=false;
+}
+document.addEventListener('click',act);
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='k')act({target:document.querySelector('[data-a=login]')})});
+if(KEY)load(true);else render();
+})();
+</script></body></html>
