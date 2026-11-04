@@ -90,8 +90,8 @@ html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
 </style>
 </head>
 <body>
-<script>window.ENTREE={name:"KOTRANA",sub:"Coach · by Stephen",lines:["Ta technique.","Tes charges.","Ton coach."],away:5,choices:function(){try{if(/[#&]t=/.test(location.hash))return null;return localStorage.getItem("kc_token_v1")?null:[{label:"Coach",role:"c"},{label:"Adhérent",role:"m"}]}catch(e){return null}},logo:"icon-192.png",v:"2026.11.04-2130"}</script>
-<script src="entree.js?v=2026.11.04-2130"></script>
+<script>window.ENTREE={name:"KOTRANA",sub:"Coach · by Stephen",lines:["Ta technique.","Tes charges.","Ton coach."],away:5,choices:function(){try{if(/[#&]t=/.test(location.hash))return null;return localStorage.getItem("kc_token_v1")?null:[{label:"Coach",role:"c"},{label:"Adhérent",role:"m"}]}catch(e){return null}},logo:"icon-192.png",v:"2026.11.04-2203"}</script>
+<script src="entree.js?v=2026.11.04-2203"></script>
 <div class="app" id="app"></div><div id="tabs"></div>
 <script src="config.js"></script>
 <script>
@@ -131,7 +131,7 @@ const EX=()=>(S.cache.videos||[]).map(v=>({id:v.id,n:v.exo,m:String(v.muscle).sp
 const exById=id=>EX().find(x=>x.id===id);
 const lastLog=id=>{for(let i=S.logs.length-1;i>=0;i--)if(S.logs[i].ex===id)return S.logs[i];return null};
 const pending=()=>S.logs.filter(l=>!l.synced);
-const MSG={token:'Jeton invalide. Vérifie que tu l’as copié en entier.',desactive:'Cet accès est désactivé. Contacte ton coach.',appareil:'Ce jeton est déjà lié à un autre téléphone. Demande à ton coach de le libérer.',reseau:'Connexion impossible pour le moment. Réessaie avec du réseau.',conf:'Application non configurée.',role:'Action non autorisée.',occupe:'Serveur occupé, réessaie dans un instant.',erreur:'Erreur du serveur, réessaie.',donnees:'Remplis ton nom et ton contact.',cgu:'Il faut accepter les conditions.',coach:'Code coach inconnu. Vérifie le code ou le lien reçu.',limite:'Trop de demandes aujourd’hui, réessaie demain.',url:'Le lien doit commencer par https://'};
+const MSG={token:'Jeton invalide. Vérifie que tu l’as copié en entier.',desactive:'Cet accès est désactivé. Contacte ton coach.',appareil:'Ce jeton est déjà lié à un autre téléphone. Demande à ton coach de le libérer.',reseau:'Connexion impossible pour le moment. Réessaie avec du réseau.',conf:'Application non configurée.',role:'Action non autorisée.',occupe:'Serveur occupé, réessaie dans un instant.',erreur:'Erreur du serveur, réessaie.',donnees:'Remplis ton nom et ton contact.',cgu:'Il faut accepter les conditions.',coach:'Code coach inconnu. Vérifie le code ou le lien reçu.',limite:'Trop de demandes aujourd’hui, réessaie demain.',email:'Entre une adresse e-mail valide : c’est là que ton jeton te sera confirmé.',url:'Le lien doit commencer par https://'};
 const errMsg=r=>r.e==='expire'?'Cet accès a expiré'+(r.fin?' le '+frl(r.fin):'')+'. Demande un renouvellement à ton coach.':(MSG[r.e]||'Erreur : '+r.e);
 /* ---------- vues ---------- */
 const brand=`<div class="brand"><img class="logo" src="${LOGO}" alt=""><div><b>KOTRANA<i>by Stephen</i></b><small>Coach · technique et charges</small></div></div>`;
@@ -143,7 +143,7 @@ function gateView(){const g=GATE,msg=g.msg?`<div class="note bad">${esc(g.msg)}<
     return `<div class="gate">${brand}<div class="card hero"><h3>${co?'Espace coach':'Espace adhérent'}</h3><p class="muted small" style="margin-top:6px">${co?'Entre le jeton coach que tu as reçu.':'Entre ton jeton. Si ton coach t’a envoyé un lien, tu n’as rien à faire.'}</p>
     <div class="field"><label for="tk">Jeton d’accès</label><textarea id="tk" rows="3" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">${esc(g.tok)}</textarea></div>${msg}
     <button class="btn pri" style="margin-top:14px" data-a="enter" ${UI.busy?'disabled':''}>${UI.busy?'Vérification…':'Entrer'}</button>
-    ${co?'':'<button class="lnk" data-a="gate" data-m="req" style="margin-top:8px">Je n’ai pas encore de jeton</button>'}<br><button class="lnk" data-a="gate" data-m="choose">Retour</button></div></div>`}
+    <button class="lnk" data-a="gate" data-m="${co?'creq':'req'}" style="margin-top:8px">${co?'Créer mon compte coach':'Je n’ai pas encore de jeton'}</button><br><button class="lnk" data-a="gate" data-m="choose">Retour</button></div></div>`}
   if(g.mode==='req'){const q=g.req;
     return `<div class="gate" style="min-height:0;padding-top:8px">${brand}<div class="card hero"><h3>Demander un jeton</h3><p class="muted small" style="margin-top:6px">Ton jeton te sera créé par l’administrateur, puis transmis par ton coach.</p>
     <div class="field"><label for="rc">Code de ton coach</label><input id="rc" value="${esc(q.code||'')}" placeholder="Ex : F34BD1" autocapitalize="characters" autocomplete="off"></div>
@@ -153,7 +153,16 @@ function gateView(){const g=GATE,msg=g.msg?`<div class="note bad">${esc(g.msg)}<
     <button class="lnk" data-a="cgu">${UI.showCgu?'Masquer':'Lire'} les conditions d’utilisation</button>${UI.showCgu?`<div class="cgu">${CGU}</div>`:''}
     <label class="chk"><input id="rg" type="checkbox" ${q.cgu?'checked':''}><span>J’ai lu et j’accepte les conditions d’utilisation.</span></label>${msg}
     <button class="btn pri" style="margin-top:14px" data-a="sendreq" ${UI.busy?'disabled':''}>${UI.busy?'Envoi…':'Envoyer la demande'}</button><button class="lnk" data-a="gate" data-m="m" style="margin-top:8px">Retour</button></div></div>`}
-  return `<div class="gate">${brand}<div class="card hero"><h3>Demande envoyée</h3><p class="muted small" style="margin-top:8px">L’administrateur va créer ton jeton. Ton coach te le transmettra. Reviens ici ensuite avec ton jeton.</p><button class="btn pri" style="margin-top:16px" data-a="gate" data-m="m">J’ai mon jeton</button></div></div>`}
+  if(g.mode==='creq'){const q=g.req;
+    return `<div class="gate" style="min-height:0;padding-top:8px">${brand}<div class="card hero"><h3>Créer mon compte coach</h3><p class="muted small" style="margin-top:6px">Remplis ces informations. Tu recevras ensuite ton jeton coach, et tes adhérents pourront te rejoindre.</p>
+    <div class="field"><label for="rn">Ton nom (ou celui de ton activité)</label><input id="rn" value="${esc(q.nom||'')}" autocomplete="name"></div>
+    <div class="field"><label for="rt">Ton adresse e-mail</label><input id="rt" type="email" value="${esc(q.contact||'')}" autocomplete="email" autocapitalize="none"></div>
+    <div class="field"><label for="ri">Ton activité (facultatif)</label><textarea id="ri" rows="2" placeholder="Ex : coaching musculation en ligne, ~10 adhérents.">${esc(q.infos||'')}</textarea></div>
+    <button class="lnk" data-a="cgu">${UI.showCgu?'Masquer':'Lire'} les conditions d’utilisation</button>${UI.showCgu?`<div class="cgu">${CGU}</div>`:''}
+    <label class="chk"><input id="rg" type="checkbox" ${q.cgu?'checked':''}><span>J’ai lu et j’accepte les conditions d’utilisation.</span></label>${msg}
+    <button class="btn pri" style="margin-top:14px" data-a="sendcreq" ${UI.busy?'disabled':''}>${UI.busy?'Envoi…':'Envoyer ma demande'}</button><button class="lnk" data-a="gate" data-m="c" style="margin-top:8px">Retour</button></div></div>`}
+  const sc=g.mode==='csent';
+  return `<div class="gate">${brand}<div class="card hero"><h3>Demande envoyée</h3><p class="muted small" style="margin-top:8px">${sc?'L’administrateur va créer ton compte coach et t’envoyer ton jeton. Reviens ici ensuite pour entrer.':'L’administrateur va créer ton jeton. Ton coach te le transmettra. Reviens ici ensuite avec ton jeton.'}</p><button class="btn pri" style="margin-top:16px" data-a="gate" data-m="${sc?'c':'m'}">J’ai mon jeton</button></div></div>`}
 function homeView(){
   const first=(ME.n||'').split(' ')[0]||'toi',E=EX(),n=E.length,recent=S.logs.slice(-1)[0],re=recent&&exById(recent.ex);
   const t=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
@@ -231,7 +240,7 @@ async function tryEnter(tok,silent){
   if(r.ok){setTok(tok);GATE.msg='';applyAuth(r);UI.tab=isCoach()?'suivi':'home';render();autoSync();if(isCoach())loadSuivi(true);return}
   if(r.e==='reseau'&&getTok()===tok&&S.cache.me&&S.cache.me.fin>=today()){ME=S.cache.me;UI.tab=isCoach()?'suivi':'home';render();toast('Hors connexion');return}
   if(r.e!=='reseau'&&r.e!=='occupe'&&r.e!=='erreur'){setTok('');}
-  ME=null;GATE.tok=tok;GATE.msg=errMsg(r);if(GATE.mode==='choose'||GATE.mode==='req'||GATE.mode==='sent')GATE.mode='m';render()}
+  ME=null;GATE.tok=tok;GATE.msg=errMsg(r);if(GATE.mode==='choose'||GATE.mode==='req'||GATE.mode==='sent'||GATE.mode==='csent'||GATE.mode==='creq')GATE.mode=GATE.mode==='csent'||GATE.mode==='creq'?'c':'m';render()}
 async function reloadAuth(){const t=getTok();if(!t)return;const r=await api({a:'auth',t,dev:dev()});if(r.ok){applyAuth(r);render();return true}toast(errMsg(r));return false}
 /* ---------- synchro du soir ---------- */
 let syncing=false,lastTry=0;
@@ -254,14 +263,18 @@ async function loadSuivi(quiet){if(!isCoach())return;UI.busy=true;if(!quiet)rend
 document.addEventListener('input',ev=>{
   if(ev.target.id==='q'){UI.q=ev.target.value;const l=$('#exl');if(l)l.innerHTML=exCards()}
   else if(ev.target.dataset&&ev.target.dataset.i==='reps'){const r=ev.target.closest('.setrow');if(r)r.classList.toggle('done',!!ev.target.value.trim())}});
-function readReq(){const g=k=>{const e=$(k);return e?e.value:''};const c=$('#rg');GATE.req={code:g('#rc').trim().toUpperCase(),nom:g('#rn').trim(),contact:g('#rt').trim(),infos:g('#ri').trim(),cgu:!!(c&&c.checked)}}
+function readReq(){const g=k=>{const e=$(k);return e?e.value:''};if(GATE.mode==='creq'){const c=$('#rg');GATE.req={nom:g('#rn').trim(),contact:g('#rt').trim(),infos:g('#ri').trim(),cgu:!!(c&&c.checked)};return}const c=$('#rg');GATE.req={code:g('#rc').trim().toUpperCase(),nom:g('#rn').trim(),contact:g('#rt').trim(),infos:g('#ri').trim(),cgu:!!(c&&c.checked)}}
 function readForm(){const g=k=>{const e=$(k);return e?e.value:null};UI.edit.n=g('#fn');UI.edit.t=g('#ft');UI.edit.u=g('#fu')}
 document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,d=b.dataset;
   if(a!=='logout'&&a!=='delex')UI.sure=false;
   switch(a){
-  case 'gate':if(GATE.mode==='req')readReq();GATE.mode=d.m;GATE.msg='';render();break;
+  case 'gate':if(GATE.mode==='req'||GATE.mode==='creq')readReq();GATE.mode=d.m;GATE.msg='';render();break;
   case 'cgu':readReq();UI.showCgu=!UI.showCgu;render();break;
   case 'enter':GATE.tok=$('#tk').value;await tryEnter(GATE.tok);break;
+  case 'sendcreq':{readReq();const q=GATE.req;if(!q.nom||!q.contact){GATE.msg='Remplis ton nom et ton adresse e-mail.';render();break}
+    if(!q.cgu){GATE.msg=MSG.cgu;render();break}
+    UI.busy=true;GATE.msg='';render();const r=await api({a:'demande',role:'c',nom:q.nom,contact:q.contact,infos:q.infos,cgu:true});UI.busy=false;
+    if(r.ok){GATE.mode='csent';GATE.req={}}else GATE.msg=errMsg(r);render();break}
   case 'sendreq':{readReq();const q=GATE.req;if(!q.code||!q.nom||!q.contact){GATE.msg='Remplis le code coach, ton nom et ton contact.';render();break}
     if(!q.cgu){GATE.msg=MSG.cgu;render();break}
     UI.busy=true;GATE.msg='';render();const r=await api({a:'demande',nom:q.nom,contact:q.contact,infos:q.infos,coachCode:q.code,cgu:true});UI.busy=false;
